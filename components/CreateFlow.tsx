@@ -27,6 +27,7 @@ export const createFlow = async (smartAccount: SmartAccount, receiverAdd: string
   // const txResponse = await smartAccount.sendTransaction({ transaction: tx })
   // const txHash = await txResponse.wait()
   // console.log({ txHash })
+  console.log(tx)
   return tx
 }
 

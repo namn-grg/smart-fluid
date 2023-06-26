@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react"
 import { BigNumber, Framework } from "@superfluid-finance/sdk-core"
-// import GetSF from "../hooks/GetSF"
 import SmartAccount from "@biconomy/smart-account"
 import _ from "lodash"
 import { ethers } from "ethers"
@@ -38,13 +37,10 @@ interface Props {
 }
 
 const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
-  const [amount, setAmount] = useState<string>("0.1")
   const [fDAIAmount, setFDAIAmount] = useState<string>("")
   const [fDAIxAmount, setFDAIxAmount] = useState<string>("")
-  const [receiverAdd, setReceiverAdd] = useState<string>("")
-  const [flowRate, setFlowRate] = useState<string>("0.1")
-  const [flowRateDisplay, setFlowRateDisplay] = useState<string>("")
   const [finalArr, setFinalArr] = useState<any[]>([])
+  const [finalTxArr, setFinalTxArr] = useState<any[]>([])
 
   const getDetails = async () => {
     console.log("Inside getDetails")
@@ -59,33 +55,31 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
     getDetails
   }, [])
 
-  const handleFlowRateChange = (e: any) => {
-    setFlowRate(() => e)
-    let newFlowRateDisplay = calculateFlowRate(e)
-    setFlowRateDisplay(newFlowRateDisplay.toString())
-  }
-
-  function calculateFlowRate(amount: Number) {
-    if (typeof Number(amount) !== "number" || isNaN(Number(amount)) === true) {
-      alert("You can only calculate a flowRate based on a number")
-      return
-    } else if (typeof Number(amount) === "number") {
-      if (Number(amount) === 0) {
-        return 0
-      }
-      const amountInWei = ethers.BigNumber.from(amount)
-      const monthlyAmount: any = ethers.utils.formatEther(amountInWei.toString())
-      const calculatedFlowRate: any = monthlyAmount * 3600 * 24 * 30
-      return calculatedFlowRate
-    }
-  }
-
-  function finalSubmit() {
+  // Do not pass random address for testing will give error
+  async function finalSubmit() {
     console.log(finalArr)
+    let tx: any, tx2: any
     for (let index = 0; index < finalArr.length; index++) {
       const element = finalArr[index]
       console.log("type: ", element.type)
+      if (element.type == "wrapunwrap") {
+        tx = await wrapOrUnwrap(element.operation, element.amount)
+      } else if (element.type == "createflow") {
+        tx = await createFlow(smartAccount, element.address, element.flowRate)
+      } else if (element.type == "updateflow") {
+        tx = await updateFlow(smartAccount, element.address, element.flowRate)
+      } else if (element.type == "deleteflow") {
+        tx = await deleteFlow(smartAccount, element.address)
+      }
+      if (tx.length > 1) {
+        setFinalTxArr((oldArray) => [...oldArray, tx[0], tx[1]])
+      } else {
+        setFinalTxArr((oldArray) => [...oldArray, tx])
+      }
+      console.log("tx: ", await tx)
+      console.log("Finaltx ", await finalTxArr)
     }
+    console.log("finalTxArr: ", finalTxArr)
   }
 
   const handleClick = (object: any) => {

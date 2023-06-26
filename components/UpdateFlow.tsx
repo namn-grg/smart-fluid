@@ -19,6 +19,7 @@ export const updateFlow = async (smartAccount: SmartAccount, receiverAdd: string
     flowRate,
     "0x"
   )
+  console.log(updateFlowTx)
   const tx = {
     to: cfv1Address,
     data: updateFlowTx.data || "0x0",
@@ -27,6 +28,7 @@ export const updateFlow = async (smartAccount: SmartAccount, receiverAdd: string
   // const txResponse = await smartAccount.sendTransaction({ transaction: tx })
   // const txHash = await txResponse.wait()
   // console.log({ txHash })
+  console.log(tx)
   return tx
 }
 

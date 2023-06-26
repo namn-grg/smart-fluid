@@ -10,7 +10,7 @@ import {
 } from "../utils/const"
 
 export const wrapOrUnwrap = async (type: string, amount: string) => {
-  console.log("Inside wrapOrUnwrap")
+  console.log("Inside wrapOrUnwrap", type, amount)
   let contract: ethers.Contract
   if (type == "wrap") {
     contract = fDAIcontract
@@ -23,8 +23,6 @@ export const wrapOrUnwrap = async (type: string, amount: string) => {
     type == "wrap"
       ? await fDAIxcontract.populateTransaction.upgrade(ethers.utils.parseEther(amount))
       : await fDAIxcontract.populateTransaction.downgrade(ethers.utils.parseEther(amount))
-
-  console.log("type", type)
 
   const tx1 = {
     to: type == "wrap" ? fDAIAddress : fDAIxAddress,
@@ -40,6 +38,7 @@ export const wrapOrUnwrap = async (type: string, amount: string) => {
   // const txHash = await txResponse.wait()
   // console.log({ txHash })
   // getDetails()
+  console.log(txs)
   return txs
 }
 
