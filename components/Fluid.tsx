@@ -122,16 +122,15 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
   }
 
   const deleteFlow = async () => {
-    const createFlowTx = await cfav1Contract.populateTransaction.deleteFlow(
+    const deleteFlowTx = await cfav1Contract.populateTransaction.deleteFlow(
       fDAIxAddress,
       smartAccount.address,
       receiverAdd,
-      flowRate,
       "0x"
     )
     const tx = {
       to: "0xcfA132E353cB4E398080B9700609bb008eceB125",
-      data: createFlowTx.data || "0x0",
+      data: deleteFlowTx.data || "0x0",
     }
 
     const txResponse = await smartAccount.sendTransaction({ transaction: tx })
