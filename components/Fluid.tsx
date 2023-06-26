@@ -29,6 +29,7 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
   const [receiverAdd, setReceiverAdd] = useState<string>("")
   const [flowRate, setFlowRate] = useState<string>("0.1")
   const [flowRateDisplay, setFlowRateDisplay] = useState<string>("")
+  const [finalArr, setFinalArr] = useState<any[]>([])
 
   const qProvider = new ethers.providers.JsonRpcProvider(
     "https://thrumming-quiet-yard.matic-testnet.discover.quiknode.pro/e8d17c21d6f86cdc291e6c8fa44a6868c51ee863/"
@@ -159,6 +160,8 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
     }
   }
 
+  function finalSubmit() {}
+
   return (
     <div className="flex flex-col items-center justify-around min-h-screen">
       <button onClick={getDetails} className="btn btn-primary">
@@ -169,6 +172,13 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
           <h3 className="">fDAI: {fDAIAmount}</h3>
           <h3 className="">fDAIx: {fDAIxAmount}</h3>
         </div>
+      </div>
+
+      <div className="card w-96 border-2 border-secondary">
+        <button className="btn">Wrap or Unwrap</button>
+        <button className="btn"> Create Flow</button>
+        <button className="btn"> Update Flow</button>
+        <button className="btn"> Delete flow</button>
       </div>
 
       {/* Wrap/Unwrap div */}
