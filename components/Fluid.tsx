@@ -5,10 +5,19 @@ import SmartAccount from "@biconomy/smart-account"
 import _ from "lodash"
 import { ethers } from "ethers"
 import { supererc20abi, erc20abi, CFAv1ForwarderABI } from "../utils"
-import WrapUnwrap from "./WrapUnwrap"
-import CreateFlow from "./CreateFlow"
-import DeleteFlow from "./DeleteFlow"
-import UpdateFlow from "./UpdateFlow"
+import WrapUnwrap, { wrapOrUnwrap } from "./WrapUnwrap"
+import CreateFlow, { createFlow } from "./CreateFlow"
+import DeleteFlow, { deleteFlow } from "./DeleteFlow"
+import UpdateFlow, { updateFlow } from "./UpdateFlow"
+import {
+  fDAIxcontract,
+  fDAIcontract,
+  cfav1Contract,
+  qProvider,
+  fDAIxAddress,
+  fDAIAddress,
+  cfv1Address,
+} from "../utils/const"
 
 /*
  There are 4 type of transaction in Superfluid
@@ -37,17 +46,6 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
   const [flowRateDisplay, setFlowRateDisplay] = useState<string>("")
   const [finalArr, setFinalArr] = useState<any[]>([])
 
-  const qProvider = new ethers.providers.JsonRpcProvider(
-    "https://thrumming-quiet-yard.matic-testnet.discover.quiknode.pro/e8d17c21d6f86cdc291e6c8fa44a6868c51ee863/"
-  )
-
-  const fDAIxAddress = "0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f"
-  const fDAIAddress = "0x15F0Ca26781C3852f8166eD2ebce5D18265cceb7"
-  const cfv1Address = "0xcfA132E353cB4E398080B9700609bb008eceB125"
-  const fDAIxcontract = new ethers.Contract(fDAIxAddress, supererc20abi, qProvider)
-  const fDAIcontract = new ethers.Contract(fDAIAddress, erc20abi, qProvider)
-  const cfav1Contract = new ethers.Contract(cfv1Address, CFAv1ForwarderABI, qProvider)
-
   const getDetails = async () => {
     console.log("Inside getDetails")
 
@@ -57,93 +55,9 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
     setFDAIxAmount(ethers.utils.formatEther(fDAIx))
   }
 
-  const wrapOrUnwrap = async (type: string, contract: ethers.Contract) => {
-    console.log("Inside wrapOrUnwrap")
-
-    const approveTx = await contract.populateTransaction.approve(fDAIxAddress, ethers.utils.parseEther(amount))
-    const actionTx =
-      type == "wrap"
-        ? await fDAIxcontract.populateTransaction.upgrade(ethers.utils.parseEther(amount))
-        : await fDAIxcontract.populateTransaction.downgrade(ethers.utils.parseEther(amount))
-
-    console.log("type", type)
-
-    const tx1 = {
-      to: type == "wrap" ? fDAIAddress : fDAIxAddress,
-      data: approveTx.data || "0x0",
-    }
-    const tx2 = {
-      to: fDAIxAddress,
-      data: actionTx.data || "0x0",
-    }
-
-    const txs = [tx1, tx2]
-    // const txResponse = await smartAccount.sendTransactionBatch({ transactions: txs })
-    // const txHash = await txResponse.wait()
-    // console.log({ txHash })
-    // getDetails()
-    return txs
-  }
-
   useEffect(() => {
     getDetails
   }, [])
-
-  const createFlow = async () => {
-    const createFlowTx = await cfav1Contract.populateTransaction.createFlow(
-      fDAIxAddress,
-      smartAccount.address,
-      receiverAdd,
-      flowRate,
-      "0x"
-    )
-    const tx = {
-      to: cfv1Address,
-      data: createFlowTx.data || "0x0",
-    }
-
-    // const txResponse = await smartAccount.sendTransaction({ transaction: tx })
-    // const txHash = await txResponse.wait()
-    // console.log({ txHash })
-    return tx
-  }
-
-  const updateFlow = async () => {
-    const updateFlowTx = await cfav1Contract.populateTransaction.updateFlow(
-      fDAIxAddress,
-      smartAccount.address,
-      receiverAdd,
-      flowRate,
-      "0x"
-    )
-    const tx = {
-      to: cfv1Address,
-      data: updateFlowTx.data || "0x0",
-    }
-
-    // const txResponse = await smartAccount.sendTransaction({ transaction: tx })
-    // const txHash = await txResponse.wait()
-    // console.log({ txHash })
-    return tx
-  }
-
-  const deleteFlow = async () => {
-    const deleteFlowTx = await cfav1Contract.populateTransaction.deleteFlow(
-      fDAIxAddress,
-      smartAccount.address,
-      receiverAdd,
-      "0x"
-    )
-    const tx = {
-      to: cfv1Address,
-      data: deleteFlowTx.data || "0x0",
-    }
-
-    // const txResponse = await smartAccount.sendTransaction({ transaction: tx })
-    // const txHash = await txResponse.wait()
-    // console.log({ txHash })
-    return tx
-  }
 
   const handleFlowRateChange = (e: any) => {
     setFlowRate(() => e)
@@ -166,7 +80,13 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
     }
   }
 
-  function finalSubmit() {}
+  function finalSubmit() {
+    console.log(finalArr)
+    for (let index = 0; index < finalArr.length; index++) {
+      const element = finalArr[index]
+      console.log("type: ", element.type)
+    }
+  }
 
   const handleClick = (object: any) => {
     setFinalArr((oldArray) => [...oldArray, object])
@@ -174,26 +94,19 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
 
   const getComponent = (item: any) => {
     if (item.type == "wrapunwrap") {
-      return (
-        <WrapUnwrap item={item} wrapOrUnwrap={wrapOrUnwrap} fDAIcontract={fDAIcontract} fDAIxcontract={fDAIxcontract} />
-      )
+      return <WrapUnwrap item={item} />
     } else if (item.type == "createflow") {
-      return (
-        <CreateFlow item={item} wrapOrUnwrap={wrapOrUnwrap} fDAIcontract={fDAIcontract} fDAIxcontract={fDAIxcontract} />
-      )
+      return <CreateFlow item={item} />
     } else if (item.type == "updateflow") {
-      return (
-        <UpdateFlow item={item} wrapOrUnwrap={wrapOrUnwrap} fDAIcontract={fDAIcontract} fDAIxcontract={fDAIxcontract} />
-      )
+      return <UpdateFlow item={item} />
     } else if (item.type == "deleteflow") {
-      return (
-        <DeleteFlow item={item} wrapOrUnwrap={wrapOrUnwrap} fDAIcontract={fDAIcontract} fDAIxcontract={fDAIxcontract} />
-      )
+      return <DeleteFlow item={item} />
     }
   }
 
   function wrapUnwrapObject() {
     let amount = 0
+    let operation = ""
     const id = _.uniqueId()
     const type = "wrapunwrap"
 
@@ -208,11 +121,24 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
       })
     }
 
+    function setOperation(value: string) {
+      setFinalArr((oldArray) => {
+        return oldArray.map((item) => {
+          if (item.id == id) {
+            item.operation = value
+          }
+          return item
+        })
+      })
+    }
+
     return {
       id,
       type,
       amount,
       setAmount,
+      operation,
+      setOperation,
     }
   }
 
@@ -279,7 +205,7 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-around min-h-screen">
+    <div className="flex flex-col items-center space-y-10 min-h-screen mt-10">
       <button onClick={getDetails} className="btn btn-primary">
         Get Details
       </button>
@@ -291,7 +217,7 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
       </div>
       {finalArr && finalArr.map((item) => getComponent(item))}
 
-      <div className="card w-96 border-2 border-secondary">
+      <div className="grid grid-cols-2 gap-6">
         <button className="btn" onClick={() => handleClick(wrapUnwrapObject())}>
           Wrap or Unwrap
         </button>
@@ -305,6 +231,9 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
           Delete Flow
         </button>
       </div>
+      <button className="btn btn-primary justify-around" onClick={finalSubmit}>
+        Submit
+      </button>
     </div>
   )
 }
