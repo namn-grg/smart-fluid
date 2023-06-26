@@ -3,7 +3,7 @@ import { BigNumber, Framework } from "@superfluid-finance/sdk-core"
 // import GetSF from "../hooks/GetSF"
 import SmartAccount from "@biconomy/smart-account"
 import { ethers } from "ethers"
-import { supererc20abi, erc20abi } from "../utils"
+import { supererc20abi, erc20abi, CFAv1ForwarderABI } from "../utils"
 /*
  There are 4 type of transaction in Superfluid
 
@@ -16,15 +16,6 @@ import { supererc20abi, erc20abi } from "../utils"
 
  batch the approve and send txn
 */
-interface Question {
-  id: number
-  text: string
-}
-
-interface Answer {
-  questionId: number
-  answer: string
-}
 
 interface Props {
   smartAccount: SmartAccount
@@ -38,6 +29,9 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
   const [amount, setAmount] = useState<string>("0.1")
   const [fDAIAmount, setFDAIAmount] = useState<string>("")
   const [fDAIxAmount, setFDAIxAmount] = useState<string>("")
+  const [receiverAdd, setReceiverAdd] = useState<string>("")
+  const [flowRate, setFlowRate] = useState<string>("0.1")
+  const [flowRateDisplay, setFlowRateDisplay] = useState<string>("")
 
   const qProvider = new ethers.providers.JsonRpcProvider(
     "https://thrumming-quiet-yard.matic-testnet.discover.quiknode.pro/e8d17c21d6f86cdc291e6c8fa44a6868c51ee863/"
@@ -47,6 +41,7 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
   const fDAIAddress = "0x15F0Ca26781C3852f8166eD2ebce5D18265cceb7"
   const fDAIxcontract = new ethers.Contract(fDAIxAddress, supererc20abi, qProvider)
   const fDAIcontract = new ethers.Contract(fDAIAddress, erc20abi, qProvider)
+  const cfav1Contract = new ethers.Contract("0xcfA132E353cB4E398080B9700609bb008eceB125", CFAv1ForwarderABI, qProvider)
 
   const getDetails = async () => {
     console.log("Inside getDetails")
@@ -60,43 +55,6 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
     const fDAI = await fDAIcontract.balanceOf(smartAccount.address)
     setFDAIAmount(ethers.utils.formatEther(fDAI))
     setFDAIxAmount(ethers.utils.formatEther(fDAIx))
-  }
-
-  const upgrade = async () => {
-    const approveTx = await fDAIcontract.populateTransaction.approve(fDAIxAddress, ethers.utils.parseEther(amount))
-    const downgradeTx = await fDAIxcontract.populateTransaction.upgrade(ethers.utils.parseEther(amount))
-    const tx1 = {
-      to: fDAIAddress,
-      data: approveTx.data || "0x0",
-    }
-    const tx2 = {
-      to: fDAIxAddress,
-      data: downgradeTx.data || "0x0",
-    }
-
-    const txs = [tx1, tx2]
-    // const txResponse = await smartAccount.sendTransaction({ transaction: tx1 })
-    const txResponse = await smartAccount.sendTransactionBatch({ transactions: txs })
-    const txHash = await txResponse.wait()
-    console.log({ txHash })
-  }
-
-  const downgrade = async () => {
-    const approveTx = await fDAIxcontract.populateTransaction.approve(fDAIxAddress, ethers.utils.parseEther(amount))
-    const downgradeTx = await fDAIxcontract.populateTransaction.downgrade(ethers.utils.parseEther(amount))
-    const tx1 = {
-      to: fDAIxAddress,
-      data: approveTx.data || "0x0",
-    }
-    const tx2 = {
-      to: fDAIxAddress,
-      data: downgradeTx.data || "0x0",
-    }
-
-    const txs = [tx1, tx2]
-    const txResponse = await smartAccount.sendTransactionBatch({ transactions: txs })
-    const txHash = await txResponse.wait()
-    console.log({ txHash })
   }
 
   const wrapOrUnwrap = async (type: string, contract: ethers.Contract) => {
@@ -130,49 +88,51 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
     getDetails
   }, [])
 
-  const createFlow = async () => {}
+  const createFlow = async () => {
+    const createFlowTx = await cfav1Contract.populateTransaction.createFlow(
+      fDAIxAddress,
+      smartAccount.address,
+      receiverAdd,
+      flowRate,
+      "0x"
+    )
+    const tx = {
+      to: "0xcfA132E353cB4E398080B9700609bb008eceB125",
+      data: createFlowTx.data || "0x0",
+    }
+
+    const txResponse = await smartAccount.sendTransaction({ transaction: tx })
+    const txHash = await txResponse.wait()
+    console.log({ txHash })
+  }
 
   const updateFlow = async () => {}
 
   const deleteFlow = async () => {}
 
-  const handleQuestionChange = (questionId: number, event: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = event.target
-    setAnswers((prevAnswers) => {
-      const existingAnswer = prevAnswers.find((answer) => answer.questionId === questionId)
-      if (existingAnswer) {
-        return prevAnswers.map((answer) => (answer.questionId === questionId ? { ...answer, answer: value } : answer))
+  const handleFlowRateChange = (e: any) => {
+    setFlowRate(() => e)
+    let newFlowRateDisplay = calculateFlowRate(e)
+    setFlowRateDisplay(newFlowRateDisplay.toString())
+  }
+
+  function calculateFlowRate(amount: Number) {
+    if (typeof Number(amount) !== "number" || isNaN(Number(amount)) === true) {
+      alert("You can only calculate a flowRate based on a number")
+      return
+    } else if (typeof Number(amount) === "number") {
+      if (Number(amount) === 0) {
+        return 0
       }
-      return [...prevAnswers, { questionId, answer: value }]
-    })
-  }
-
-  const handleAddQuestion = () => {
-    const newQuestionId = questions.length + 1
-    setQuestions((prevQuestions) => [...prevQuestions, { id: newQuestionId, text: `Question ${newQuestionId}` }])
-  }
-
-  const handleSubmit = () => {
-    // Perform your desired action with the answers
-    console.log(answers)
+      const amountInWei = ethers.BigNumber.from(amount)
+      const monthlyAmount: any = ethers.utils.formatEther(amountInWei.toString())
+      const calculatedFlowRate: any = monthlyAmount * 3600 * 24 * 30
+      return calculatedFlowRate
+    }
   }
 
   return (
     <div className="flex flex-col items-center justify-around min-h-screen">
-      {/* {questions.map((question) => (
-        <div key={question.id}>
-          <label htmlFor={`question-${question.id}`}>{question.text}</label>
-          <input
-            id={`question-${question.id}`}
-            type="text"
-            onChange={(event) => handleQuestionChange(question.id, event)}
-          />
-        </div>
-      ))}
-
-      <button onClick={handleAddQuestion}>Add Question</button>
-
-      <button onClick={handleSubmit}>Submit</button> */}
       <button onClick={getDetails} className="btn btn-primary">
         Get Details
       </button>
@@ -206,13 +166,13 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
         <div className="card-body items-center text-center">
           <input
             type="text"
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => setReceiverAdd(e.target.value)}
             placeholder="Receiver Address"
             className="input input-bordered input-primary w-full max-w-xs"
           />
           <input
             type="text"
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => handleFlowRateChange(e.target.value)}
             placeholder="Flow Rate"
             className="input input-bordered input-primary w-full max-w-xs"
           />
@@ -221,6 +181,7 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
               Create Flow
             </button>
           </div>
+          <h3>{flowRateDisplay} Currency/month</h3>
         </div>
       </div>
     </div>
