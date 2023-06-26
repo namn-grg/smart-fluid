@@ -2,8 +2,14 @@ import React, { useEffect, useState } from "react"
 import { BigNumber, Framework } from "@superfluid-finance/sdk-core"
 // import GetSF from "../hooks/GetSF"
 import SmartAccount from "@biconomy/smart-account"
+import _ from "lodash"
 import { ethers } from "ethers"
 import { supererc20abi, erc20abi, CFAv1ForwarderABI } from "../utils"
+import WrapUnwrap from "./WrapUnwrap"
+import CreateFlow from "./CreateFlow"
+import DeleteFlow from "./DeleteFlow"
+import UpdateFlow from "./UpdateFlow"
+
 /*
  There are 4 type of transaction in Superfluid
 
@@ -21,6 +27,8 @@ interface Props {
   smartAccount: SmartAccount
   provider: any
 }
+
+
 
 const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
   const [amount, setAmount] = useState<string>("0.1")
@@ -162,6 +170,90 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
 
   function finalSubmit() {}
 
+  const handleClick = (object: any) => {
+    setFinalArr((oldArray) => [...oldArray, object])
+  }
+
+  const getComponent = (item: any) => {
+    if (item.type == 'wrapunwrap') {
+      return <WrapUnwrap 
+                item={item}
+                wrapOrUnwrap={wrapOrUnwrap}
+                fDAIcontract={fDAIcontract}
+                fDAIxcontract={fDAIxcontract}
+              />
+    } else if (item.type == 'createflow') {
+      return <CreateFlow
+                item={item}
+                wrapOrUnwrap={wrapOrUnwrap}
+                fDAIcontract={fDAIcontract}
+                fDAIxcontract={fDAIxcontract}
+              />
+    }
+  }
+
+  function wrapUnwrapObject() {
+    let amount = 0
+    const id = _.uniqueId()
+    const type = 'wrapunwrap'
+
+    function setAmount(value: number) {
+      setFinalArr((oldArray) => {
+        return oldArray.map(item => {
+          if (item.id == id) {
+            item.amount = value
+          }
+          return item
+        })
+      })
+    }
+
+    return {
+      id,
+      type,
+      amount,
+      setAmount
+    }
+  }
+
+  function createFlowObject() {
+    let input = ''
+    let address = ''
+    const id = _.uniqueId()
+    const type = 'createflow'
+
+    function setInput(value: string) {
+      setFinalArr((oldArray) => {
+        return oldArray.map(item => {
+          if (item.id == id) {
+            item.input = value
+          }
+          return item
+        })
+      })
+    }
+
+    function setAddress (value: string) {
+      setFinalArr((oldArray) => {
+        return oldArray.map(item => {
+          if (item.id == id) {
+            item.address = value
+          }
+          return item
+        })
+      })
+    }
+
+    return {
+      id,
+      type,
+      input,
+      setInput,
+      address,
+      setAddress
+    }
+  }
+
   return (
     <div className="flex flex-col items-center justify-around min-h-screen">
       <button onClick={getDetails} className="btn btn-primary">
@@ -173,100 +265,19 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
           <h3 className="">fDAIx: {fDAIxAmount}</h3>
         </div>
       </div>
+      {finalArr && (
+        finalArr.map(item => (
+          getComponent(item)
+        ))
+      )}
 
       <div className="card w-96 border-2 border-secondary">
-        <button className="btn">Wrap or Unwrap</button>
-        <button className="btn"> Create Flow</button>
-        <button className="btn"> Update Flow</button>
-        <button className="btn"> Delete flow</button>
+        <button className="btn" onClick={() => handleClick(wrapUnwrapObject())}>Wrap or Unwrap</button>
+        <button className="btn" onClick={() => handleClick(createFlowObject())}>Create Flow</button>
+        <button className="btn">Update Flow</button>
+        <button className="btn">Delete flow</button>
       </div>
-
-      {/* Wrap/Unwrap div */}
-      <div className="card w-96 border-2 border-secondary">
-        <div className="card-body items-center text-center">
-          <input
-            type="text"
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="Enter amount of fDAI"
-            className="input input-bordered input-primary w-full max-w-xs"
-          />
-          <div className="card-actions justify-end">
-            <button className="btn btn-neutral" onClick={() => wrapOrUnwrap("wrap", fDAIcontract)}>
-              Wrap
-            </button>
-            <button className="btn btn-neutral" onClick={() => wrapOrUnwrap("unwrap", fDAIxcontract)}>
-              Unwrap
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Create flow div */}
-      <div className="card w-96 border-2 border-secondary">
-        <div className="card-body items-center text-center">
-          <input
-            type="text"
-            onChange={(e) => setReceiverAdd(e.target.value)}
-            placeholder="Receiver Address"
-            className="input input-bordered input-primary w-full max-w-xs"
-          />
-          <input
-            type="text"
-            onChange={(e) => handleFlowRateChange(e.target.value)}
-            placeholder="Flow Rate"
-            className="input input-bordered input-primary w-full max-w-xs"
-          />
-          <div className="card-actions justify-end">
-            <button className="btn btn-neutral" onClick={createFlow}>
-              Create Flow
-            </button>
-          </div>
-          <h3>{flowRateDisplay} Currency/month</h3>
-        </div>
-      </div>
-
-      {/* Update flow div */}
-      <div className="card w-96 border-2 border-secondary">
-        <div className="card-body items-center text-center">
-          <input
-            type="text"
-            onChange={(e) => setReceiverAdd(e.target.value)}
-            placeholder="Receiver Address"
-            className="input input-bordered input-primary w-full max-w-xs"
-          />
-          <input
-            type="text"
-            onChange={(e) => handleFlowRateChange(e.target.value)}
-            placeholder="Flow Rate"
-            className="input input-bordered input-primary w-full max-w-xs"
-          />
-          <div className="card-actions justify-end">
-            <button className="btn btn-neutral" onClick={updateFlow}>
-              Update Flow
-            </button>
-          </div>
-          <h3>{flowRateDisplay} Currency/month</h3>
-        </div>
-      </div>
-
-      {/* Delete flow div */}
-      <div className="card w-96 border-2 border-secondary">
-        <div className="card-body items-center text-center">
-          <input
-            type="text"
-            onChange={(e) => setReceiverAdd(e.target.value)}
-            placeholder="Receiver Address"
-            className="input input-bordered input-primary w-full max-w-xs"
-          />
-          <div className="card-actions justify-end">
-            <button className="btn btn-neutral" onClick={deleteFlow}>
-              Delete Flow
-            </button>
-          </div>
-          <h3>{flowRateDisplay} Currency/month</h3>
-        </div>
-      </div>
-    </div>
+  </div>
   )
 }
 
