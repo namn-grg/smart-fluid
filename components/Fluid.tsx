@@ -8,8 +8,8 @@ import { supererc20abi, erc20abi, CFAv1ForwarderABI } from "../utils"
  There are 4 type of transaction in Superfluid
 
  1. Wrap and Unwrap - amount
- 2. Create flow - amount and receiver address
- 3. Update flow - amount and receiver address
+ 2. Create flow - flow rate and receiver address
+ 3. Update flow - flow rate and receiver address
  4. Delete flow - receiver address
                     token address was optional in all of them
  Also a faucet to get the test token if possible fDAI or fDAIx
@@ -170,6 +170,8 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
           <h3 className="">fDAIx: {fDAIxAmount}</h3>
         </div>
       </div>
+
+      {/* Wrap/Unwrap div */}
       <div className="card w-96 border-2 border-secondary">
         <div className="card-body items-center text-center">
           <input
@@ -189,6 +191,7 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
         </div>
       </div>
 
+      {/* Create flow div */}
       <div className="card w-96 border-2 border-secondary">
         <div className="card-body items-center text-center">
           <input
@@ -206,6 +209,48 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
           <div className="card-actions justify-end">
             <button className="btn btn-neutral" onClick={createFlow}>
               Create Flow
+            </button>
+          </div>
+          <h3>{flowRateDisplay} Currency/month</h3>
+        </div>
+      </div>
+
+      {/* Update flow div */}
+      <div className="card w-96 border-2 border-secondary">
+        <div className="card-body items-center text-center">
+          <input
+            type="text"
+            onChange={(e) => setReceiverAdd(e.target.value)}
+            placeholder="Receiver Address"
+            className="input input-bordered input-primary w-full max-w-xs"
+          />
+          <input
+            type="text"
+            onChange={(e) => handleFlowRateChange(e.target.value)}
+            placeholder="Flow Rate"
+            className="input input-bordered input-primary w-full max-w-xs"
+          />
+          <div className="card-actions justify-end">
+            <button className="btn btn-neutral" onClick={updateFlow}>
+              Update Flow
+            </button>
+          </div>
+          <h3>{flowRateDisplay} Currency/month</h3>
+        </div>
+      </div>
+
+      {/* Delete flow div */}
+      <div className="card w-96 border-2 border-secondary">
+        <div className="card-body items-center text-center">
+          <input
+            type="text"
+            onChange={(e) => setReceiverAdd(e.target.value)}
+            placeholder="Receiver Address"
+            className="input input-bordered input-primary w-full max-w-xs"
+          />
+          <div className="card-actions justify-end">
+            <button className="btn btn-neutral" onClick={deleteFlow}>
+              Delete Flow
             </button>
           </div>
           <h3>{flowRateDisplay} Currency/month</h3>
