@@ -23,9 +23,6 @@ interface Props {
 }
 
 const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
-  const [questions, setQuestions] = useState<Question[]>([])
-  const [answers, setAnswers] = useState<Answer[]>([])
-  const [sf, setSf] = useState<Framework | null>(null)
   const [amount, setAmount] = useState<string>("0.1")
   const [fDAIAmount, setFDAIAmount] = useState<string>("")
   const [fDAIxAmount, setFDAIxAmount] = useState<string>("")
@@ -106,9 +103,41 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
     console.log({ txHash })
   }
 
-  const updateFlow = async () => {}
+  const updateFlow = async () => {
+    const updateFlowTx = await cfav1Contract.populateTransaction.updateFlow(
+      fDAIxAddress,
+      smartAccount.address,
+      receiverAdd,
+      flowRate,
+      "0x"
+    )
+    const tx = {
+      to: "0xcfA132E353cB4E398080B9700609bb008eceB125",
+      data: updateFlowTx.data || "0x0",
+    }
 
-  const deleteFlow = async () => {}
+    const txResponse = await smartAccount.sendTransaction({ transaction: tx })
+    const txHash = await txResponse.wait()
+    console.log({ txHash })
+  }
+
+  const deleteFlow = async () => {
+    const createFlowTx = await cfav1Contract.populateTransaction.deleteFlow(
+      fDAIxAddress,
+      smartAccount.address,
+      receiverAdd,
+      flowRate,
+      "0x"
+    )
+    const tx = {
+      to: "0xcfA132E353cB4E398080B9700609bb008eceB125",
+      data: createFlowTx.data || "0x0",
+    }
+
+    const txResponse = await smartAccount.sendTransaction({ transaction: tx })
+    const txHash = await txResponse.wait()
+    console.log({ txHash })
+  }
 
   const handleFlowRateChange = (e: any) => {
     setFlowRate(() => e)
@@ -151,7 +180,6 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
             className="input input-bordered input-primary w-full max-w-xs"
           />
           <div className="card-actions justify-end">
-            {/* <button className="btn btn-neutral" onClick={() => wrapOrUnwrap("wrap", fDAIcontract)}> */}
             <button className="btn btn-neutral" onClick={() => wrapOrUnwrap("wrap", fDAIcontract)}>
               Wrap
             </button>
