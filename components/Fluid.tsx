@@ -28,8 +28,6 @@ interface Props {
   provider: any
 }
 
-
-
 const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
   const [amount, setAmount] = useState<string>("0.1")
   const [fDAIAmount, setFDAIAmount] = useState<string>("")
@@ -45,17 +43,13 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
 
   const fDAIxAddress = "0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f"
   const fDAIAddress = "0x15F0Ca26781C3852f8166eD2ebce5D18265cceb7"
+  const cfv1Address = "0xcfA132E353cB4E398080B9700609bb008eceB125"
   const fDAIxcontract = new ethers.Contract(fDAIxAddress, supererc20abi, qProvider)
   const fDAIcontract = new ethers.Contract(fDAIAddress, erc20abi, qProvider)
-  const cfav1Contract = new ethers.Contract("0xcfA132E353cB4E398080B9700609bb008eceB125", CFAv1ForwarderABI, qProvider)
+  const cfav1Contract = new ethers.Contract(cfv1Address, CFAv1ForwarderABI, qProvider)
 
   const getDetails = async () => {
     console.log("Inside getDetails")
-
-    // const sf = Framework.create({
-    //   chainId: 80001,
-    //   provider,
-    // })
 
     const fDAIx = await fDAIxcontract.balanceOf(smartAccount.address)
     const fDAI = await fDAIcontract.balanceOf(smartAccount.address)
@@ -84,10 +78,11 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
     }
 
     const txs = [tx1, tx2]
-    const txResponse = await smartAccount.sendTransactionBatch({ transactions: txs })
-    const txHash = await txResponse.wait()
-    console.log({ txHash })
-    getDetails()
+    // const txResponse = await smartAccount.sendTransactionBatch({ transactions: txs })
+    // const txHash = await txResponse.wait()
+    // console.log({ txHash })
+    // getDetails()
+    return txs
   }
 
   useEffect(() => {
@@ -103,13 +98,14 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
       "0x"
     )
     const tx = {
-      to: "0xcfA132E353cB4E398080B9700609bb008eceB125",
+      to: cfv1Address,
       data: createFlowTx.data || "0x0",
     }
 
-    const txResponse = await smartAccount.sendTransaction({ transaction: tx })
-    const txHash = await txResponse.wait()
-    console.log({ txHash })
+    // const txResponse = await smartAccount.sendTransaction({ transaction: tx })
+    // const txHash = await txResponse.wait()
+    // console.log({ txHash })
+    return tx
   }
 
   const updateFlow = async () => {
@@ -121,13 +117,14 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
       "0x"
     )
     const tx = {
-      to: "0xcfA132E353cB4E398080B9700609bb008eceB125",
+      to: cfv1Address,
       data: updateFlowTx.data || "0x0",
     }
 
-    const txResponse = await smartAccount.sendTransaction({ transaction: tx })
-    const txHash = await txResponse.wait()
-    console.log({ txHash })
+    // const txResponse = await smartAccount.sendTransaction({ transaction: tx })
+    // const txHash = await txResponse.wait()
+    // console.log({ txHash })
+    return tx
   }
 
   const deleteFlow = async () => {
@@ -138,13 +135,14 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
       "0x"
     )
     const tx = {
-      to: "0xcfA132E353cB4E398080B9700609bb008eceB125",
+      to: cfv1Address,
       data: deleteFlowTx.data || "0x0",
     }
 
-    const txResponse = await smartAccount.sendTransaction({ transaction: tx })
-    const txHash = await txResponse.wait()
-    console.log({ txHash })
+    // const txResponse = await smartAccount.sendTransaction({ transaction: tx })
+    // const txHash = await txResponse.wait()
+    // console.log({ txHash })
+    return tx
   }
 
   const handleFlowRateChange = (e: any) => {
@@ -175,31 +173,33 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
   }
 
   const getComponent = (item: any) => {
-    if (item.type == 'wrapunwrap') {
-      return <WrapUnwrap 
-                item={item}
-                wrapOrUnwrap={wrapOrUnwrap}
-                fDAIcontract={fDAIcontract}
-                fDAIxcontract={fDAIxcontract}
-              />
-    } else if (item.type == 'createflow') {
-      return <CreateFlow
-                item={item}
-                wrapOrUnwrap={wrapOrUnwrap}
-                fDAIcontract={fDAIcontract}
-                fDAIxcontract={fDAIxcontract}
-              />
+    if (item.type == "wrapunwrap") {
+      return (
+        <WrapUnwrap item={item} wrapOrUnwrap={wrapOrUnwrap} fDAIcontract={fDAIcontract} fDAIxcontract={fDAIxcontract} />
+      )
+    } else if (item.type == "createflow") {
+      return (
+        <CreateFlow item={item} wrapOrUnwrap={wrapOrUnwrap} fDAIcontract={fDAIcontract} fDAIxcontract={fDAIxcontract} />
+      )
+    } else if (item.type == "updateflow") {
+      return (
+        <UpdateFlow item={item} wrapOrUnwrap={wrapOrUnwrap} fDAIcontract={fDAIcontract} fDAIxcontract={fDAIxcontract} />
+      )
+    } else if (item.type == "deleteflow") {
+      return (
+        <DeleteFlow item={item} wrapOrUnwrap={wrapOrUnwrap} fDAIcontract={fDAIcontract} fDAIxcontract={fDAIxcontract} />
+      )
     }
   }
 
   function wrapUnwrapObject() {
     let amount = 0
     const id = _.uniqueId()
-    const type = 'wrapunwrap'
+    const type = "wrapunwrap"
 
     function setAmount(value: number) {
       setFinalArr((oldArray) => {
-        return oldArray.map(item => {
+        return oldArray.map((item) => {
           if (item.id == id) {
             item.amount = value
           }
@@ -212,30 +212,30 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
       id,
       type,
       amount,
-      setAmount
+      setAmount,
     }
   }
 
-  function createFlowObject() {
-    let input = ''
-    let address = ''
+  function generalFlowObject(rand: string) {
+    let flowRate = ""
+    let address = ""
     const id = _.uniqueId()
-    const type = 'createflow'
+    const type = rand == "create" ? "createflow" : "updateflow"
 
-    function setInput(value: string) {
+    function setFlowRate(value: string) {
       setFinalArr((oldArray) => {
-        return oldArray.map(item => {
+        return oldArray.map((item) => {
           if (item.id == id) {
-            item.input = value
+            item.flowRate = value
           }
           return item
         })
       })
     }
 
-    function setAddress (value: string) {
+    function setAddress(value: string) {
       setFinalArr((oldArray) => {
-        return oldArray.map(item => {
+        return oldArray.map((item) => {
           if (item.id == id) {
             item.address = value
           }
@@ -247,10 +247,34 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
     return {
       id,
       type,
-      input,
-      setInput,
+      flowRate,
+      setFlowRate,
       address,
-      setAddress
+      setAddress,
+    }
+  }
+
+  function deleteFlowObject() {
+    let address = ""
+    const id = _.uniqueId()
+    const type = "deleteflow"
+
+    function setAddress(value: string) {
+      setFinalArr((oldArray) => {
+        return oldArray.map((item) => {
+          if (item.id == id) {
+            item.address = value
+          }
+          return item
+        })
+      })
+    }
+
+    return {
+      id,
+      type,
+      address,
+      setAddress,
     }
   }
 
@@ -265,19 +289,23 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
           <h3 className="">fDAIx: {fDAIxAmount}</h3>
         </div>
       </div>
-      {finalArr && (
-        finalArr.map(item => (
-          getComponent(item)
-        ))
-      )}
+      {finalArr && finalArr.map((item) => getComponent(item))}
 
       <div className="card w-96 border-2 border-secondary">
-        <button className="btn" onClick={() => handleClick(wrapUnwrapObject())}>Wrap or Unwrap</button>
-        <button className="btn" onClick={() => handleClick(createFlowObject())}>Create Flow</button>
-        <button className="btn">Update Flow</button>
-        <button className="btn">Delete flow</button>
+        <button className="btn" onClick={() => handleClick(wrapUnwrapObject())}>
+          Wrap or Unwrap
+        </button>
+        <button className="btn" onClick={() => handleClick(generalFlowObject("create"))}>
+          Create Flow
+        </button>
+        <button className="btn" onClick={() => handleClick(generalFlowObject("update"))}>
+          Update Flow
+        </button>
+        <button className="btn" onClick={() => handleClick(deleteFlowObject())}>
+          Delete Flow
+        </button>
       </div>
-  </div>
+    </div>
   )
 }
 

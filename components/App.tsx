@@ -31,7 +31,7 @@ function App() {
     if (!sdkRef.current) {
       const socialLoginSDK = new SocialLogin()
       const signature2 = await socialLoginSDK.whitelistUrl("http://localhost:3000/")
-      const signature1 = await socialLoginSDK.whitelistUrl("https://aaboard.vercel.app")
+      const signature1 = await socialLoginSDK.whitelistUrl("https://aafluid.vercel.app")
       await socialLoginSDK.init({
         chainId: ethers.utils.hexValue(ChainId.POLYGON_MUMBAI).toString(),
         network: "testnet",
