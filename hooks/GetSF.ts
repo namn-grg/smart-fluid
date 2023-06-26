@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 
 const GetSF=async()=>{
 
-    const provider = new ethers.providers.JsonRpcProvider("https://eth-goerli.g.alchemy.com/v2/gh4d1-dAT4B_1Khy86s7JUbFhQIclYqO");
+    const provider = new ethers.providers.JsonRpcProvider("https://thrumming-quiet-yard.matic-testnet.discover.quiknode.pro/e8d17c21d6f86cdc291e6c8fa44a6868c51ee863/");
     const network = await provider.getNetwork();
 
     const sf = await Framework.create({

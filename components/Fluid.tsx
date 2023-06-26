@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react"
 import { BigNumber, Framework } from "@superfluid-finance/sdk-core"
-import GetSF from "../hooks/GetSF"
+// import GetSF from "../hooks/GetSF"
 import SmartAccount from "@biconomy/smart-account"
 import { ethers } from "ethers"
+import { supererc20abi } from "../utils"
 /*
  There are 4 type of transaction in Superfluid
 
@@ -36,39 +37,50 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
   const [sf, setSf] = useState<Framework | null>(null)
   const [amount, setAmount] = useState<string>("0.1")
 
+  const qProvider = new ethers.providers.JsonRpcProvider(
+    "https://thrumming-quiet-yard.matic-testnet.discover.quiknode.pro/e8d17c21d6f86cdc291e6c8fa44a6868c51ee863/"
+  )
   const fDAIxAddress = "0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f"
-  const getDetails = async () => {
-    const sf = await GetSF()
-    setSf(sf)
-    const fDAIx = await sf.loadSuperToken("0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f")
-    console.log(fDAIx)
-  }
+  const fDAIAddress = "0x15F0Ca26781C3852f8166eD2ebce5D18265cceb7"
+  const fDAIxcontract = new ethers.Contract(fDAIxAddress, supererc20abi, qProvider)
+  const fDAIcontract = new ethers.Contract(fDAIAddress, supererc20abi, qProvider)
+
+  const getDetails = async () => {}
 
   const upgrade = async () => {
-    const sf = await GetSF()
-    const fdaix = await sf.loadSuperToken(fDAIxAddress)
-    const fdai = fdaix?.underlyingToken
-    const approve = fdai?.approve({
-      receiver: fdaix.address || "0x0",
-      amount: ethers.utils.parseEther(amount) as any,
-    })
-    // const apv = await approve.exec(signer)
-    // await apv.wait()
-    const op = fdaix.upgrade({ amount: ethers.utils.parseEther(amount) })
-    // const res = op.exec(signer)
+    const approveTx = await fDAIcontract.populateTransaction.approve(fDAIAddress, ethers.utils.parseEther(amount))
+    const downgradeTx = await fDAIcontract.populateTransaction.upgrade(ethers.utils.parseEther(amount))
+    const tx1 = {
+      to: fDAIxAddress,
+      data: approveTx.data || "0x0",
+    }
+    const tx2 = {
+      to: fDAIxAddress,
+      data: downgradeTx.data || "0x0",
+    }
+
+    const txs = [tx1, tx2]
+    const txResponse = await smartAccount.sendTransactionBatch({ transactions: txs })
+    const txHash = await txResponse.wait()
+    console.log({ txHash })
   }
 
   const downgrade = async () => {
-    const sf = await GetSF()
-    const fdaix = await sf.loadSuperToken("0xF2d68898557cCb2Cf4C10c3Ef2B034b2a69DAD00")
-    // const approve = fdaix.approve({
-    //   receiver: fdaix.address || "0x0",
-    //   amount: ethers.utils.parseEther(amount),
-    // })
-    // const apv = await approve.exec(signer)
-    // await apv.wait()
-    // const op = fdaix.downgrade({ amount: ethers.utils.parseEther(amount) })
-    // const res = op.exec(signer)
+    const approveTx = await fDAIxcontract.populateTransaction.approve(fDAIxAddress, ethers.utils.parseEther(amount))
+    const downgradeTx = await fDAIxcontract.populateTransaction.downgrade(ethers.utils.parseEther(amount))
+    const tx1 = {
+      to: fDAIxAddress,
+      data: approveTx.data || "0x0",
+    }
+    const tx2 = {
+      to: fDAIxAddress,
+      data: downgradeTx.data || "0x0",
+    }
+
+    const txs = [tx1, tx2]
+    const txResponse = await smartAccount.sendTransactionBatch({ transactions: txs })
+    const txHash = await txResponse.wait()
+    console.log({ txHash })
   }
 
   useEffect(() => {
@@ -97,7 +109,7 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
   }
 
   return (
-    <div>
+    <div className="flex flex-col">
       {/* {questions.map((question) => (
         <div key={question.id}>
           <label htmlFor={`question-${question.id}`}>{question.text}</label>
@@ -115,7 +127,7 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
       <button className="btn btn-primary" onClick={upgrade}>
         Upgrade
       </button>
-      <input type="number" onChange={(e) => setAmount(e.target.value)} />
+      <input type="text" onChange={(e) => setAmount(e.target.value)} />
       <button className="btn btn-primary" onClick={downgrade}>
         Downgrade
       </button>
