@@ -78,6 +78,7 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
 
   // Do not pass random address for testing will give error
   async function finalSubmit() {
+    setLoading(true)
     console.log("Inside finalSubmit, final arr: ", finalArr)
     let tempFinalTxArr: any[] = []
     let tx: any
@@ -140,6 +141,7 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
     toast.success("Transaction succefully sent")
     setSendTxn(false)
     showSuccessMessage(`Transaction succefully sent ${txHash.transactionHash}`, txHash.transactionHash)
+    setLoading(false)
   }
 
   const handleClick = (object: any) => {
