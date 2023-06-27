@@ -36,6 +36,7 @@ body {
   @apply text-sm rounded-md border border-solid p-2 font-bold transition-colors border-blue24 bg-transparent text-orange70 hover:bg-blue24 active:border-orange24 active:bg-orange20 active:text-orange60
 }
 
-.input {
+
+.input1 {
   @apply rounded-md border px-3 py-2 transition-colors border-gray40 bg-blue18 hover:border-blue36 hover:bg-blue24 hover:focus-within:border-blue60 hover:focus-within:bg-blue10 focus:border-blue60 focus:bg-blue10 w-full max-w-xs
 }

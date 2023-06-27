@@ -6,6 +6,7 @@ import SmartAccount from "@biconomy/smart-account"
 import { ToastContainer, Zoom, toast } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import Fluid from "./Fluid"
+import Head from "next/head"
 
 function App() {
   const [smartAccount, setSmartAccount] = useState<SmartAccount | null>(null)
@@ -87,28 +88,12 @@ function App() {
         ],
       })
       const acct = await smartAccount.init()
-
-      acct.on("txHashGenerated", (response: any) => {
-        console.log("txHashGenerated event received in AddLP via emitter", response)
-        showSuccessMessage(`Transaction sent: ${response.hash}`, response.hash)
-      })
-
-      acct.on("txHashChanged", (response: any) => {
-        console.log("txHashChanged event received in AddLP via emitter", response)
-        showSuccessMessage(`Transaction updated with hash: ${response.hash}`, response.hash)
-      })
-
-      acct.on("txMined", (response: any) => {
-        console.log("txMined event received in AddLP via emitter", response)
-        showSuccessMessage(`Transaction confirmed: ${response.hash}`, response.hash)
-      })
-
       console.log({ deployed: await smartAccount.isDeployed(ChainId.POLYGON_MUMBAI) })
       const isDeployed = await smartAccount.isDeployed(ChainId.POLYGON_MUMBAI)
       if (isDeployed == false) {
         console.log("Not deployed, deploying now...")
         toast.info("Deploying smart account, please wait...", {
-          autoClose: 3000,
+          autoClose: 5000,
         })
         const deployTx = await smartAccount.deployWalletUsingPaymaster()
         console.log(deployTx)
@@ -151,6 +136,12 @@ function App() {
 
   return (
     <div className="bg-[#14141D] min-h-screen">
+      <Head>
+        <title>SmartFluid</title>
+        <meta name="description" content="One-click Superfluid experience" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
       <ToastContainer
         position="top-center"
         autoClose={5000}
@@ -169,7 +160,7 @@ function App() {
           <div className="hero-content flex-col lg:flex-row-reverse">
             <img src="/hero.png" className=" max-w-md rounded-lg mx-4" />
             <div>
-              <h1 className="text-6xl font-bold">Smart Fluid</h1>
+              <h1 className="text-6xl font-bold">SmartFluid</h1>
               <h3 className="text-xl font-bold">Unleash the power of Account Abstraction</h3>
 
               <p className="mt-6 mb-3 text-lg">
@@ -209,7 +200,7 @@ function App() {
         <div className="flex flex-col">
           <div className="navbar rounded-md border border-orange24 bg-orange08">
             <div className="flex-1">
-              <p className="text-orange90 text-xl">Smart Fluid</p>
+              <p className="text-orange90 text-xl">SmartFluid</p>
             </div>
             <div className="flex-none gap-2">
               <div className="form-control">

@@ -42,15 +42,18 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
   const [finalTxArr, setFinalTxArr] = useState<any[]>([])
   const [interval, enableInterval] = useState(false)
   const [sendTxn, setSendTxn] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const getDetails = async () => {
     console.log("Inside getDetails")
 
     const fDAIx = await fDAIxcontract.balanceOf(smartAccount.address)
     const fDAI = await fDAIcontract.balanceOf(smartAccount.address)
+    console.log("fDAIx: ", ethers.utils.formatEther(fDAIx))
+    console.log("fDAI: ", ethers.utils.formatEther(fDAI))
     setFDAIAmount(ethers.utils.formatEther(fDAI))
     setFDAIxAmount(ethers.utils.formatEther(fDAIx))
-    getCorrectValue(fDAIAmount, fDAIxAmount)
+    // getCorrectValue(fDAIAmount, fDAIxAmount)
   }
 
   useEffect(() => {
@@ -136,7 +139,7 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
     console.log({ txHash })
     toast.success("Transaction succefully sent")
     setSendTxn(false)
-    showSuccessMessage("Transaction succefully sent", txHash.transactionHash)
+    showSuccessMessage(`Transaction succefully sent ${txHash.transactionHash}`, txHash.transactionHash)
   }
 
   const handleClick = (object: any) => {
@@ -256,6 +259,7 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
   }
 
   function getCorrectValue(test1: string, test2: string) {
+    console.log("Inside getCorrectValue")
     let amount: any = Number(test1)
     let amount2: any = Number(test2)
     amount = amount.toFixed(2)
@@ -271,10 +275,18 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
       </button> */}
       <h1 className="text-xl text-orange60 py-4"> Select the operations you want to perform</h1>
       <div className="card p-4 m-0 w-42 bg-fbg fixed top-40 left-20">
-        <div className="items-center text-center">
-          <h3 className="">Amount in SA:</h3>
+        <h3 className=" text-center">Amount in SA:</h3>
+        <div className="">
           <p className=" font-extralight">fDAI: {fDAIAmount}</p>
           <p className=" font-extralight">fDAIx: {fDAIxAmount}</p>
+          Get some fDAIx from{" "}
+          <a
+            href="https://docs.superfluid.finance/superfluid/developers/constant-flow-agreement-cfa"
+            target="_blank"
+            className="text-orange60"
+          >
+            here{" "}
+          </a>
         </div>
       </div>
       {finalArr &&
@@ -299,12 +311,16 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
           Delete Flow
         </button>
       </div>
-      <button
-        className="rounded-md border border-solid p-2 font-bold transition-colors border-orange40 bg-orange40 text-white hover:border-orange52 hover:bg-orange52 active:border-orange24 active:bg-orange24 my-5"
-        onClick={finalSubmit}
-      >
-        Send Batch Transaction
-      </button>
+      {!loading ? (
+        <button
+          className="rounded-md border border-solid p-2 font-bold transition-colors border-orange40 bg-orange40 text-white hover:border-orange52 hover:bg-orange52 active:border-orange24 active:bg-orange24 my-5"
+          onClick={finalSubmit}
+        >
+          Send Batch Transaction
+        </button>
+      ) : (
+        <span className="mx-4 loading loading-spinner loading-lg text-orange40 my-5"></span>
+      )}
       <button
         className="text-md text-orange90 bg-transparent my-4"
         onClick={() =>

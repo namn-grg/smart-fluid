@@ -66,14 +66,14 @@ const CreateFlow = ({ item }: any) => {
           value={item.address}
           onChange={(e) => item.setAddress(e.target.value)}
           placeholder="Receiver Address"
-          className="input input-bordered input-primary w-full max-w-xs"
+          className="input1"
         />
         <input
           type="text"
           value={item.flowRate}
           onChange={(e) => handleFlowRateChange(e.target.value)}
           placeholder="Flow Rate"
-          className="input input-bordered input-primary w-full max-w-xs"
+          className="input1"
         />
         {/* <div className="card-actions justify-end">
           <button className="btn btn-neutral" onClick={createFlow}>

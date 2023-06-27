@@ -52,7 +52,7 @@ const WrapUnwrap = ({ item }: any) => {
           value={item.amount}
           onChange={(e) => item.setAmount(e.target.value)}
           placeholder="Enter amount"
-          className="rounded-md border px-3 py-2 transition-colors border-gray40 bg-blue18 hover:border-blue36 hover:bg-blue24 hover:focus-within:border-blue60 hover:focus-within:bg-blue10 focus:border-blue60 focus:bg-blue10 w-full max-w-xs"
+          className="input1"
         />
         <div className="card-actions justify-end">
           <button className="btn" onClick={() => item.setOperation("wrap")}>
