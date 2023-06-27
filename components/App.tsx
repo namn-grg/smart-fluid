@@ -3,9 +3,8 @@ import SocialLogin from "@biconomy/web3-auth"
 import { ChainId } from "@biconomy/core-types"
 import { ethers } from "ethers"
 import SmartAccount from "@biconomy/smart-account"
-import { ToastContainer, toast } from "react-toastify"
+import { ToastContainer, Zoom, toast } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
-import Head from "next/head"
 import Fluid from "./Fluid"
 
 function App() {
@@ -53,6 +52,21 @@ function App() {
     }
   }
 
+  const showSuccessMessage = (message: string, txHash?: string) => {
+    toast.success(message, {
+      onClick: () => {
+        window.open(`https://mumbai.polygonscan.com//tx/${txHash}`, "_blank")
+      },
+      position: "bottom-left",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    })
+  }
+
   async function setupSmartAccount() {
     if (!sdkRef?.current?.provider) {
       return
@@ -73,10 +87,29 @@ function App() {
         ],
       })
       const acct = await smartAccount.init()
+
+      acct.on("txHashGenerated", (response: any) => {
+        console.log("txHashGenerated event received in AddLP via emitter", response)
+        showSuccessMessage(`Transaction sent: ${response.hash}`, response.hash)
+      })
+
+      acct.on("txHashChanged", (response: any) => {
+        console.log("txHashChanged event received in AddLP via emitter", response)
+        showSuccessMessage(`Transaction updated with hash: ${response.hash}`, response.hash)
+      })
+
+      acct.on("txMined", (response: any) => {
+        console.log("txMined event received in AddLP via emitter", response)
+        showSuccessMessage(`Transaction confirmed: ${response.hash}`, response.hash)
+      })
+
       console.log({ deployed: await smartAccount.isDeployed(ChainId.POLYGON_MUMBAI) })
       const isDeployed = await smartAccount.isDeployed(ChainId.POLYGON_MUMBAI)
       if (isDeployed == false) {
         console.log("Not deployed, deploying now...")
+        toast.info("Deploying smart account, please wait...", {
+          autoClose: 3000,
+        })
         const deployTx = await smartAccount.deployWalletUsingPaymaster()
         console.log(deployTx)
       }
@@ -100,7 +133,7 @@ function App() {
 
   const displayAddress = (address: string) => {
     if (address) {
-      return address.slice(0, 4) + "..." + address.slice(-4)
+      return address.slice(0, 5) + "..." + address.slice(-4)
     }
   }
 
@@ -109,6 +142,7 @@ function App() {
       .writeText(smartAccount?.address || "null")
       .then(() => {
         console.log("Successfully copied to clipboard")
+        toast.success("Smart contract address copied")
       })
       .catch((error) => {
         console.error("Failed to copy word:", error)
@@ -116,33 +150,73 @@ function App() {
   }
 
   return (
-    <>
+    <div className="bg-[#14141D] min-h-screen">
+      <ToastContainer
+        position="top-center"
+        autoClose={5000}
+        hideProgressBar={true}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+        transition={Zoom}
+      />
       {!smartAccount ? (
-        <div className="hero min-h-screen bg-base-200">
+        <div className="hero min-h-screen bg-[#14141D] px-10">
           <div className="hero-content flex-col lg:flex-row-reverse">
-            <img src="https://picsum.photos/700" className="max-w-sm rounded-lg shadow-2xl" />
+            <img src="/hero.png" className=" max-w-md rounded-lg mx-4" />
             <div>
-              <h1 className="text-5xl font-bold">SmartFluid</h1>
-              <p className="py-6">
-                Combining the power of smart accounts and programmable money to create a new dynamic
+              <h1 className="text-6xl font-bold">Smart Fluid</h1>
+              <h3 className="text-xl font-bold">Unleash the power of Account Abstraction</h3>
+
+              <p className="mt-6 mb-3 text-lg">
+                Bringing <span className="text-orange-600 font-bold">Smart</span> accounts to Super
+                <span className="text-orange-600 font-bold">Fluid</span>
+                <br />
+              </p>
+              <p className="mb-4">
+                Perform complex multi-step transactions in a single click!
+                <br /> Without paying any gas fee 🤯
               </p>
               {!loading ? (
-                <button className="btn btn-primary" onClick={login}>
+                <button
+                  className="rounded-md border border-solid p-2 font-bold transition-colors border-orange40 bg-orange40 text-white hover:border-orange52 hover:bg-orange52 active:border-orange24 active:bg-orange24"
+                  onClick={login}
+                >
                   Login
                 </button>
               ) : (
-                <span className="loading loading-spinner text-secondary"></span>
+                <span className="mx-4 loading loading-spinner loading-lg text-orange40"></span>
               )}
             </div>
           </div>
+          <footer className="footer footer-center p-4 text-base-content absolute bottom-0">
+            <div>
+              <p>
+                Made with ♥️ by{" "}
+                <a href="https://twitter.com/namn_grg" className="font-bold text-orange60">
+                  {" "}
+                  Naman ⚡️
+                </a>
+              </p>
+            </div>
+          </footer>
         </div>
       ) : (
         <div className="flex flex-col">
-          <div className="navbar bg-base-100 py-4 px-12">
+          <div className="navbar rounded-md border border-orange24 bg-orange08">
             <div className="flex-1">
-              <p className="btn btn-ghost normal-case text-3xl">SmartFluid</p>
+              <p className="text-orange90 text-xl">Smart Fluid</p>
             </div>
             <div className="flex-none gap-2">
+              <div className="form-control">
+                <button className="btn w-32 md:w-auto bg-orange24 text-orange90" onClick={copyToClipboard}>
+                  {displayAddress(smartAccount.address)}
+                </button>
+              </div>
               <div className="dropdown dropdown-end">
                 <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
                   <div className="w-10 rounded-full">
@@ -158,17 +232,12 @@ function App() {
                   </li>
                 </ul>
               </div>
-              <div className="form-control">
-                <button className="btn btn-secondary w-32 md:w-auto" onClick={copyToClipboard}>
-                  {displayAddress(smartAccount.address)}
-                </button>
-              </div>
             </div>
           </div>
           <Fluid smartAccount={smartAccount} provider={provider} />
         </div>
       )}
-    </>
+    </div>
   )
 }
 export default App

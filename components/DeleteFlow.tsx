@@ -30,9 +30,9 @@ export const deleteFlow = async (smartAccount: SmartAccount, receiverAdd: String
 
 const DeleteFlow = ({ item }: any) => {
   return (
-    <div className="card w-96 border-2 border-secondary">
-      <div className="card-body items-center text-center">
-        <h2 className="card-title">Delete Flow</h2>
+    <div className="card p-0 w-96 bg-fbg">
+      <div className="card-body items-center text-center p-6 space-y-2">
+        <h2 className=" text-lg font-medium hover:text-orange60">Delete Flow</h2>
         <input
           type="text"
           onChange={(e) => item.setAddress(e.target.value)}

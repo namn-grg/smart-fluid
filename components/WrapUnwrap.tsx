@@ -44,21 +44,21 @@ export const wrapOrUnwrap = async (type: string, amount: string) => {
 
 const WrapUnwrap = ({ item }: any) => {
   return (
-    <div className="card w-96 border-2 border-secondary">
-      <div className="card-body items-center text-center">
-        <h2 className="card-title">Wrap/Unwrap</h2>
+    <div className="card p-0 w-96 bg-fbg">
+      <div className="card-body items-center text-center p-6 space-y-2">
+        <h2 className=" text-lg font-medium hover:text-orange60">Wrap/Unwrap</h2>
         <input
           type="text"
           value={item.amount}
           onChange={(e) => item.setAmount(e.target.value)}
           placeholder="Enter amount"
-          className="input input-bordered input-primary w-full max-w-xs"
+          className="rounded-md border px-3 py-2 transition-colors border-gray40 bg-blue18 hover:border-blue36 hover:bg-blue24 hover:focus-within:border-blue60 hover:focus-within:bg-blue10 focus:border-blue60 focus:bg-blue10 w-full max-w-xs"
         />
         <div className="card-actions justify-end">
-          <button className="btn btn-neutral" onClick={() => item.setOperation("wrap")}>
+          <button className="btn" onClick={() => item.setOperation("wrap")}>
             Wrap
           </button>
-          <button className="btn btn-neutral" onClick={() => item.setOperation("unwrap")}>
+          <button className="btn" onClick={() => item.setOperation("unwrap")}>
             Unwrap
           </button>
         </div>

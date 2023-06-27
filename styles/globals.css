@@ -3,6 +3,8 @@
 @tailwind utilities;
 
 :root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
@@ -24,4 +26,16 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb));
+}
+
+/* .btn {
+  @apply rounded-md border border-solid p-2 font-bold transition-colors border-orange40 bg-orange40 text-white hover:border-orange52 hover:bg-orange52 active:border-orange24 active:bg-orange24
+} */
+
+.btn {
+  @apply text-sm rounded-md border border-solid p-2 font-bold transition-colors border-blue24 bg-transparent text-orange70 hover:bg-blue24 active:border-orange24 active:bg-orange20 active:text-orange60
+}
+
+.input {
+  @apply rounded-md border px-3 py-2 transition-colors border-gray40 bg-blue18 hover:border-blue36 hover:bg-blue24 hover:focus-within:border-blue60 hover:focus-within:bg-blue10 focus:border-blue60 focus:bg-blue10 w-full max-w-xs
 }

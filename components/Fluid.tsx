@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { BigNumber, Framework } from "@superfluid-finance/sdk-core"
 import SmartAccount from "@biconomy/smart-account"
-import _ from "lodash"
+import _, { set } from "lodash"
 import { ethers } from "ethers"
 import WrapUnwrap, { wrapOrUnwrap } from "./WrapUnwrap"
 import CreateFlow, { createFlow } from "./CreateFlow"
@@ -16,7 +16,7 @@ import {
   fDAIAddress,
   cfv1Address,
 } from "../utils/const"
-
+import { ToastContainer, toast } from "react-toastify"
 /*
  There are 4 type of transaction in Superfluid
 
@@ -41,6 +41,7 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
   const [finalArr, setFinalArr] = useState<any[]>([])
   const [finalTxArr, setFinalTxArr] = useState<any[]>([])
   const [interval, enableInterval] = useState(false)
+  const [sendTxn, setSendTxn] = useState(false)
 
   const getDetails = async () => {
     console.log("Inside getDetails")
@@ -49,16 +50,17 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
     const fDAI = await fDAIcontract.balanceOf(smartAccount.address)
     setFDAIAmount(ethers.utils.formatEther(fDAI))
     setFDAIxAmount(ethers.utils.formatEther(fDAIx))
+    getCorrectValue(fDAIAmount, fDAIxAmount)
   }
 
-  // useEffect(() => {
-  //   if (interval) {
-  //     const interval = setInterval(() => {
-  //       getDetails()
-  //     }, 1000)
-  //     return () => clearInterval(interval)
-  //   }
-  // }, [interval])
+  useEffect(() => {
+    if (interval) {
+      const interval = setInterval(() => {
+        getDetails()
+      }, 1000)
+      return () => clearInterval(interval)
+    }
+  }, [interval])
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -75,7 +77,8 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
   async function finalSubmit() {
     console.log("Inside finalSubmit, final arr: ", finalArr)
     let tempFinalTxArr: any[] = []
-    let tx: any, tx2: any
+    let tx: any
+    setSendTxn(true)
     for (let index = 0; index < finalArr.length; index++) {
       const element = finalArr[index]
       console.log("type: ", element.type)
@@ -90,28 +93,40 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
       }
       console.log("tx: ", tx)
       if (tx.length > 1) {
-        // setFinalTxArr((oldArray) => [...oldArray, tx[0]])
-        // setFinalTxArr((oldArray) => [...oldArray, tx[1]])
         tempFinalTxArr.push(tx[0])
         tempFinalTxArr.push(tx[1])
       } else {
-        // setFinalTxArr((oldArray) => [...oldArray, tx])
         tempFinalTxArr.push(tx)
       }
       console.log("loop: ", index, ": ", tempFinalTxArr)
     }
+    toast.success("Transaction prepared, sending batch transaction")
     setFinalTxArr(tempFinalTxArr)
     console.log("Finish finalTxArr: ", finalTxArr)
   }
 
   useEffect(() => {
     console.log("FinalTxArr has been updated: ", finalTxArr)
-    // Perform any necessary actions with the updated finalTxArr here
 
-    if (finalTxArr.length > 0) {
+    if (finalTxArr.length > 0 && sendTxn) {
       sendBatch()
     }
   }, [finalTxArr])
+
+  const showSuccessMessage = (message: string, txHash?: string) => {
+    toast.success(message, {
+      onClick: () => {
+        window.open(`https://mumbai.polygonscan.com//tx/${txHash}`, "_blank")
+      },
+      position: "bottom-left",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    })
+  }
 
   async function sendBatch() {
     console.log("sending batch")
@@ -119,6 +134,9 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
     const txResponse = await smartAccount.sendTransactionBatch({ transactions: finalTxArr })
     const txHash = await txResponse.wait()
     console.log({ txHash })
+    toast.success("Transaction succefully sent")
+    setSendTxn(false)
+    showSuccessMessage("Transaction succefully sent", txHash.transactionHash)
   }
 
   const handleClick = (object: any) => {
@@ -237,20 +255,37 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
     }
   }
 
+  function getCorrectValue(test1: string, test2: string) {
+    let amount: any = Number(test1)
+    let amount2: any = Number(test2)
+    amount = amount.toFixed(2)
+    amount2 = amount2.toFixed(2)
+    setFDAIAmount(amount)
+    setFDAIxAmount(amount2)
+  }
+
   return (
-    <div className="flex flex-col items-center space-y-10 min-h-screen mt-10">
-      <button onClick={getDetails} className="btn btn-primary">
+    <div className="flex flex-col items-center min-h-screen mt-10">
+      {/* <button onClick={getDetails} className="btn btn-primary">
         Get Details
-      </button>
-      <div className="card w-96 border-2 border-secondary">
-        <div className="card-body items-center text-center">
-          <h3 className="">fDAI: {fDAIAmount}</h3>
-          <h3 className="">fDAIx: {fDAIxAmount}</h3>
+      </button> */}
+      <h1 className="text-xl text-orange60 py-4"> Select the operations you want to perform</h1>
+      <div className="card p-4 m-0 w-42 bg-fbg fixed top-40 left-20">
+        <div className="items-center text-center">
+          <h3 className="">Amount in SA:</h3>
+          <p className=" font-extralight">fDAI: {fDAIAmount}</p>
+          <p className=" font-extralight">fDAIx: {fDAIxAmount}</p>
         </div>
       </div>
-      {finalArr && finalArr.map((item) => getComponent(item))}
+      {finalArr &&
+        finalArr.map((item) => (
+          <>
+            {getComponent(item)}
+            <div className="w-[0.2px] h-8 mx-auto border-2 border-orange65"></div>
+          </>
+        ))}
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-4 gap-6 mt-10">
         <button className="btn" onClick={() => handleClick(wrapUnwrapObject())}>
           Wrap or Unwrap
         </button>
@@ -264,8 +299,23 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
           Delete Flow
         </button>
       </div>
-      <button className="btn btn-primary justify-around" onClick={finalSubmit}>
-        Submit
+      <button
+        className="rounded-md border border-solid p-2 font-bold transition-colors border-orange40 bg-orange40 text-white hover:border-orange52 hover:bg-orange52 active:border-orange24 active:bg-orange24 my-5"
+        onClick={finalSubmit}
+      >
+        Send Batch Transaction
+      </button>
+      <button
+        className="text-md text-orange90 bg-transparent my-4"
+        onClick={() =>
+          window.open(
+            `https://app.superfluid.finance/token/polygon-mumbai/0x5d8b4c2554aeb7e86f387b4d6c00ac33499ed01f?view=${smartAccount.address}`,
+            "_blank"
+          )
+        }
+      >
+        {" "}
+        Verify the flows on superfluid console here{" "}
       </button>
     </div>
   )
