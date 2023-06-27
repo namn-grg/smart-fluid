@@ -28,6 +28,7 @@ function App() {
   }, [interval])
 
   async function login() {
+    setLoading(true)
     if (!sdkRef.current) {
       const socialLoginSDK = new SocialLogin()
       const signature2 = await socialLoginSDK.whitelistUrl("http://localhost:3000/")
@@ -37,7 +38,7 @@ function App() {
         network: "testnet",
         whitelistUrls: {
           "http://localhost:3000/": signature2,
-          "https://aaboard.vercel.app": signature1,
+          "https://aafluid.vercel.app": signature1,
         },
       })
       console.log("socialLoginSDK =>", socialLoginSDK)
@@ -125,9 +126,13 @@ function App() {
               <p className="py-6">
                 Combining the power of smart accounts and programmable money to create a new dynamic
               </p>
-              <button className="btn btn-primary" onClick={login}>
-                Login
-              </button>
+              {!loading ? (
+                <button className="btn btn-primary" onClick={login}>
+                  Login
+                </button>
+              ) : (
+                <span className="loading loading-spinner text-secondary"></span>
+              )}
             </div>
           </div>
         </div>

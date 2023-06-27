@@ -46,6 +46,7 @@ const WrapUnwrap = ({ item }: any) => {
   return (
     <div className="card w-96 border-2 border-secondary">
       <div className="card-body items-center text-center">
+        <h2 className="card-title">Wrap/Unwrap</h2>
         <input
           type="text"
           value={item.amount}

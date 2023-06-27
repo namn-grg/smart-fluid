@@ -11,7 +11,9 @@ import {
 import SmartAccount from "@biconomy/smart-account"
 import { useState } from "react"
 
-export const createFlow = async (smartAccount: SmartAccount, receiverAdd: string, flowRate: String) => {
+export const createFlow = async (smartAccount: SmartAccount, receiverAdd: string, flowRate: any) => {
+  // console.log("Create flow:", smartAccount.address, receiverAdd, flowRate)
+
   const createFlowTx = await cfav1Contract.populateTransaction.createFlow(
     fDAIxAddress,
     smartAccount.address,
@@ -27,16 +29,16 @@ export const createFlow = async (smartAccount: SmartAccount, receiverAdd: string
   // const txResponse = await smartAccount.sendTransaction({ transaction: tx })
   // const txHash = await txResponse.wait()
   // console.log({ txHash })
-  console.log(tx)
+  console.log("Create flow:", tx)
   return tx
 }
 
 const CreateFlow = ({ item }: any) => {
   const [flowRateDisplay, setFlowRateDisplay] = useState("0")
 
-  const handleFlowRateChange = (e: any) => {
-    item.setFlowRate(() => e)
-    let newFlowRateDisplay = calculateFlowRate(e)
+  const handleFlowRateChange = (e: string) => {
+    item.setFlowRate(e)
+    let newFlowRateDisplay = calculateFlowRate(e as any)
     setFlowRateDisplay(newFlowRateDisplay.toString())
   }
 
@@ -58,6 +60,7 @@ const CreateFlow = ({ item }: any) => {
   return (
     <div className="card w-96 border-2 border-secondary">
       <div className="card-body items-center text-center">
+        <h2 className="card-title">Create Flow</h2>
         <input
           type="text"
           value={item.address}
@@ -67,7 +70,7 @@ const CreateFlow = ({ item }: any) => {
         />
         <input
           type="text"
-          value={item.input}
+          value={item.flowRate}
           onChange={(e) => handleFlowRateChange(e.target.value)}
           placeholder="Flow Rate"
           className="input input-bordered input-primary w-full max-w-xs"

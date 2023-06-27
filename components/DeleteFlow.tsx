@@ -32,6 +32,7 @@ const DeleteFlow = ({ item }: any) => {
   return (
     <div className="card w-96 border-2 border-secondary">
       <div className="card-body items-center text-center">
+        <h2 className="card-title">Delete Flow</h2>
         <input
           type="text"
           onChange={(e) => item.setAddress(e.target.value)}

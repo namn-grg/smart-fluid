@@ -28,16 +28,16 @@ export const updateFlow = async (smartAccount: SmartAccount, receiverAdd: string
   // const txResponse = await smartAccount.sendTransaction({ transaction: tx })
   // const txHash = await txResponse.wait()
   // console.log({ txHash })
-  console.log(tx)
+  console.log("Update flow:", tx)
   return tx
 }
 
 const UpdateFlow = ({ item }: any) => {
   const [flowRateDisplay, setFlowRateDisplay] = useState("0")
 
-  const handleFlowRateChange = (e: any) => {
-    item.setFlowRate(() => e)
-    let newFlowRateDisplay = calculateFlowRate(e)
+  const handleFlowRateChange = (e: string) => {
+    item.setFlowRate(e)
+    let newFlowRateDisplay = calculateFlowRate(e as any)
     setFlowRateDisplay(newFlowRateDisplay.toString())
   }
 
@@ -59,14 +59,17 @@ const UpdateFlow = ({ item }: any) => {
   return (
     <div className="card w-96 border-2 border-secondary">
       <div className="card-body items-center text-center">
+        <h2>Update Flow</h2>
         <input
           type="text"
+          value={item.address}
           onChange={(e) => item.setAddress(e.target.value)}
           placeholder="Receiver Address"
           className="input input-bordered input-primary w-full max-w-xs"
         />
         <input
           type="text"
+          value={item.flowRate}
           onChange={(e) => handleFlowRateChange(e.target.value)}
           placeholder="Flow Rate"
           className="input input-bordered input-primary w-full max-w-xs"

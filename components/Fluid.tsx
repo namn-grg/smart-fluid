@@ -3,7 +3,6 @@ import { BigNumber, Framework } from "@superfluid-finance/sdk-core"
 import SmartAccount from "@biconomy/smart-account"
 import _ from "lodash"
 import { ethers } from "ethers"
-import { supererc20abi, erc20abi, CFAv1ForwarderABI } from "../utils"
 import WrapUnwrap, { wrapOrUnwrap } from "./WrapUnwrap"
 import CreateFlow, { createFlow } from "./CreateFlow"
 import DeleteFlow, { deleteFlow } from "./DeleteFlow"
@@ -41,6 +40,7 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
   const [fDAIxAmount, setFDAIxAmount] = useState<string>("")
   const [finalArr, setFinalArr] = useState<any[]>([])
   const [finalTxArr, setFinalTxArr] = useState<any[]>([])
+  const [interval, enableInterval] = useState(false)
 
   const getDetails = async () => {
     console.log("Inside getDetails")
@@ -51,13 +51,30 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
     setFDAIxAmount(ethers.utils.formatEther(fDAIx))
   }
 
+  // useEffect(() => {
+  //   if (interval) {
+  //     const interval = setInterval(() => {
+  //       getDetails()
+  //     }, 1000)
+  //     return () => clearInterval(interval)
+  //   }
+  // }, [interval])
+
   useEffect(() => {
-    getDetails
+    const intervalId = setInterval(() => {
+      getDetails()
+    }, 20000)
+
+    // Clean up the interval on component unmount
+    return () => {
+      clearInterval(intervalId)
+    }
   }, [])
 
   // Do not pass random address for testing will give error
   async function finalSubmit() {
-    console.log(finalArr)
+    console.log("Inside finalSubmit, final arr: ", finalArr)
+    let tempFinalTxArr: any[] = []
     let tx: any, tx2: any
     for (let index = 0; index < finalArr.length; index++) {
       const element = finalArr[index]
@@ -71,15 +88,37 @@ const Fluid: React.FC<Props> = ({ smartAccount, provider }) => {
       } else if (element.type == "deleteflow") {
         tx = await deleteFlow(smartAccount, element.address)
       }
+      console.log("tx: ", tx)
       if (tx.length > 1) {
-        setFinalTxArr((oldArray) => [...oldArray, tx[0], tx[1]])
+        // setFinalTxArr((oldArray) => [...oldArray, tx[0]])
+        // setFinalTxArr((oldArray) => [...oldArray, tx[1]])
+        tempFinalTxArr.push(tx[0])
+        tempFinalTxArr.push(tx[1])
       } else {
-        setFinalTxArr((oldArray) => [...oldArray, tx])
+        // setFinalTxArr((oldArray) => [...oldArray, tx])
+        tempFinalTxArr.push(tx)
       }
-      console.log("tx: ", await tx)
-      console.log("Finaltx ", await finalTxArr)
+      console.log("loop: ", index, ": ", tempFinalTxArr)
     }
-    console.log("finalTxArr: ", finalTxArr)
+    setFinalTxArr(tempFinalTxArr)
+    console.log("Finish finalTxArr: ", finalTxArr)
+  }
+
+  useEffect(() => {
+    console.log("FinalTxArr has been updated: ", finalTxArr)
+    // Perform any necessary actions with the updated finalTxArr here
+
+    if (finalTxArr.length > 0) {
+      sendBatch()
+    }
+  }, [finalTxArr])
+
+  async function sendBatch() {
+    console.log("sending batch")
+
+    const txResponse = await smartAccount.sendTransactionBatch({ transactions: finalTxArr })
+    const txHash = await txResponse.wait()
+    console.log({ txHash })
   }
 
   const handleClick = (object: any) => {
